@@ -45,3 +45,19 @@ function getForecast(city, callback) {
 
   }, delayms)
 }
+
+function fetchCurrentCity(onSuccess, onError) {
+  getCurrentCity(function(error, result) {
+    if(error) {
+      onError(error);
+    }
+    onSuccess(result);
+  })
+}
+
+test("fetchCurrentCity with separate success and error callbacks", function() {
+  fetchCurrentCity(
+    result  => console.log(result),
+    error   => console.log(error)
+  );
+});

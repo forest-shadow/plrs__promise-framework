@@ -1,4 +1,4 @@
-suite("Callback examples");
+suite.skip("Callback examples");
 
 test("Nesting serial async dependencies", done => {
 
