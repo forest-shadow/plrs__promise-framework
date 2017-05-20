@@ -46,7 +46,7 @@ function getForecast(city, callback) {
   }, delayms)
 }
 
-suite.only("opearations");
+suite.only("operations");
 
 function fetchCurrentCity() {
   const operation = {};
@@ -54,13 +54,14 @@ function fetchCurrentCity() {
   getCurrentCity(function(error, result) {
     if(error) {
       operation.onError(error);
+      return;
     }
     operation.onSuccess(result);
   });
 
   operation.setCallbacks = function setCallbacks( onSuccess, onError ) {
     operation.onSuccess = onSuccess;
-    operation.onerror   = onError;
+    operation.onError   = onError;
   };
 
   return operation;
