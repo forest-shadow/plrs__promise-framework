@@ -62,13 +62,33 @@ function fetchCurrentCity() {
     operation.successReactions.forEach(r => r(result));
   });
 
-  operation.setCallbacks = function setCallbacks( onSuccess, onError ) {
-    operation.successReactions.push(onSuccess);
+  operation.onCompletion = function setCallbacks( onSuccess, onError ) {
+    const noop = function() {};
+    operation.successReactions.push(onSuccess || noop);
     operation.errorReactions.push(onError);
+  };
+  operation.onFailure = function onFailure(onError) {
+    operation.onCompletion(null, onError);
   };
   return operation;
 }
 
+test("register only error handler, ignores success handler", function(done) {
+
+  const operation = fetchCurrentCity();
+
+  operation.onFailure( error  => done(error) );
+  operation.onCompletion( result  => done() );
+});
+
+test("register only success handler, ignores error handler", function(done) {
+
+  // todo operation that can fail
+  const operation = fetchCurrentCity();
+
+  operation.onCompletion( result  => done(new Error("shouldn't succeed")) );
+  operation.onFailure( error  => done(error) );
+});
 
 test("pass multiple callbacks - all of them are called", function(done) {
 
@@ -76,8 +96,8 @@ test("pass multiple callbacks - all of them are called", function(done) {
 
   const multiDone = callDone(done).afterTwoCalls();
 
-  operation.setCallbacks( result  => multiDone() );
-  operation.setCallbacks( result  => multiDone() );
+  operation.onCompletion( result  => multiDone() );
+  operation.onCompletion( result  => multiDone() );
 });
 
 test("fetchCurrentCity pass the callbacks later on", function(done) {
@@ -85,7 +105,7 @@ test("fetchCurrentCity pass the callbacks later on", function(done) {
   const operation = fetchCurrentCity();
 
   // register callbacks
-  operation.setCallbacks(
+  operation.onCompletion(
     result  => done(),
     error   => done(error)
   );
