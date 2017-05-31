@@ -78,15 +78,27 @@ function Operation() {
     errorReactions: []
   };
   operation.fail = function fail(error) {
+    operation.state = "failed";
+    operation.error = error;
     operation.errorReactions.forEach(r => r(error));
   };
   operation.succeed = function succeed(result) {
+    operation.state = "succeeded";
+    operation.result = result;
     operation.successReactions.forEach(r => r(result));
   };
   operation.onCompletion = function setCallbacks( onSuccess, onError ) {
-    const noop = function() {};
-    operation.successReactions.push(onSuccess || noop);
-    operation.errorReactions.push(onError || noop);
+    const noop = function () {
+    };
+
+    if ( operation.state === "succeeded" ) {
+      onSuccess( operation.result );
+    } else if (operation.state === "failed") {
+      onError(operation.error);
+    } else {
+      operation.successReactions.push(onSuccess || noop);
+      operation.errorReactions.push(onError || noop);
+    }
   };
   operation.onFailure = function onFailure(onError) {
     operation.onCompletion(null, onError);
@@ -102,6 +114,26 @@ function Operation() {
 
   return operation;
 }
+
+function doLater(func) {
+  setTimeout(func, 1);
+}
+
+test("register error callback async", function(done) {
+  var operationThatErrors = fetchWeather();
+
+  doLater(function() {
+    operationThatErrors.onCompletion((city) => done());
+  });
+});
+
+test("register success callback async", function(done) {
+  var operationThatSucceeds = fetchCurrentCity();
+
+  doLater(function() {
+    operationThatSucceeds.onCompletion((city) => done());
+  });
+});
 
 test("noop if no success handler passed", function(done) {
 
