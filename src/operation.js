@@ -13,6 +13,8 @@ function getCurrentCity(callback) {
 }
 
 function getWeather(city, callback) {
+  console.log("Getting weather");
+
   setTimeout(function () {
 
     if (!city) {
@@ -30,6 +32,8 @@ function getWeather(city, callback) {
 }
 
 function getForecast(city, callback) {
+  console.log("Getting forecast");
+
   setTimeout(function () {
 
     if (!city) {
@@ -118,6 +122,20 @@ function Operation() {
 function doLater(func) {
   setTimeout(func, 1);
 }
+
+test("lexical parallelism", function(done) {
+  const city = "NYC",
+        weatherOp = fetchWeather(city),
+        forecastOp = fetchForecast(city);
+  console.log("before completion handlers");
+
+  weatherOp.onCompletion(function(weather) {
+    forecastOp.onCompletion(function(forecast) {
+      console.log(`It's currently ${weather.temp} in ${city} with a five day forecast of ${forecast.fiveDay}`);
+      done();
+    });
+  });
+});
 
 test("register error callback async", function(done) {
   var operationThatErrors = fetchWeather();
