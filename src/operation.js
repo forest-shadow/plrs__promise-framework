@@ -138,10 +138,10 @@ test("lexical parallelism", function(done) {
 });
 
 test("register error callback async", function(done) {
-  var operationThatErrors = fetchWeather();
+  let operationThatErrors = fetchWeather();
 
   doLater(function() {
-    operationThatErrors.onCompletion((city) => done());
+    operationThatErrors.onFailure(() => done());
   });
 });
 
