@@ -91,9 +91,20 @@ function Operation() {
     operation.result = result;
     operation.successReactions.forEach(r => r(result));
   };
+
   operation.onCompletion = function setCallbacks( onSuccess, onError ) {
-    const noop = function () {
-    };
+    const noop = function () {};
+    const completionOp = new Operation();
+
+    function successHandler() {
+      if (onSuccess) {
+        const callbackResult = onSuccess( operation.result );
+
+        if(callbackResult && callbackResult.onCompletion) {
+          callbackResult.forwardCompletion( completionOp );
+        }
+      }
+    }
 
     if ( operation.state === "succeeded" ) {
       onSuccess( operation.result );
@@ -103,9 +114,13 @@ function Operation() {
       operation.successReactions.push(onSuccess || noop);
       operation.errorReactions.push(onError || noop);
     }
+
+    return completionOp;
   };
+  operation.then = operation.onCompletion;
+
   operation.onFailure = function onFailure(onError) {
-    operation.onCompletion(null, onError);
+    return operation.onCompletion(null, onError);
   };
 
   operation.nodeCallback = function (error, result) {
@@ -116,12 +131,28 @@ function Operation() {
     operation.succeed(result);
   };
 
+  operation.forwardCompletion = function(op) {
+    operation.onCompletion(op.succeed, op.fail);
+  };
+
   return operation;
 }
 
 function doLater(func) {
   setTimeout(func, 1);
 }
+
+test("life is full of async, nesting is inevitable, let's do something about it", function() {
+
+  fetchCurrentCity()
+    .then( fetchWeather )
+    .then( printTheWeather );
+
+  function printTheWeather(weather) {
+    console.log(weather);
+    done();
+  }
+});
 
 test("lexical parallelism", function(done) {
   const city = "NYC",
